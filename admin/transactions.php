@@ -1,165 +1,96 @@
-<?php include('db_connect.php');?>
+<?php
+include '../database/db_connect.php';
 
-<div class="container-fluid">
-	
-	<div class="col-lg-12">
-		<div class="row">
-			<!-- FORM Panel -->
-			<div class="col-md-4">
-			<form action="" id="manage-transaction">
-				<div class="card">
-					<div class="card-header">
-						  Transactions Form
-				  	</div>
-					<div class="card-body">
-						<div id="msg"></div>
-							<input type="hidden" name="id">
-							<div class="form-group">
-								<label class="control-label">Name</label>
-								<textarea name="name" id="" cols="30" rows="2" class="form-control"></textarea>
-							</div>
-							
-							
-							
-					</div>
-							
-					<div class="card-footer">
-						<div class="row">
-							<div class="col-md-12">
-								<button class="btn btn-sm btn-primary col-sm-3 offset-md-3"> Save</button>
-								<button class="btn btn-sm btn-default col-sm-3" type="button" onclick="_reset()"> Cancel</button>
+$stmtTransaction = $pdo->prepare("SELECT * FROM transactions");
+$stmtTransaction->execute();
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>TRANSACTIONS</title>
+
+	<?php include './view/bootstrap.php' ?>
+</head>
+
+<body>
+	<?php include './view/navbar.php' ?>
+	<?php include './view/sidebar.php' ?>
+
+	<div class="container-fluid mt-5">
+		<div class="container">
+			<div class="mb-3">
+				<button class="btn btn-primary fw-bold" type="button" data-bs-toggle="modal" data-bs-target="#addTransactionList">
+					Add Transaction List
+				</button>
+
+				<form action="./php/transaction_create.php" method="post" class="add">
+					<div class="modal fade" id="addTransactionList">
+						<div class="modal-dialog modal-dialog-centered">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title">Create Transaction List</h5>
+								</div>
+								<div class="modal-body">
+									<div class="row">
+										<div class="col-12">
+											<div class="mb-3 form-group">
+												<label for="transactionStatus" class="form-label">Transaction Status</label>
+												<select name="transaction_status" id="transactionStatus" class="form-select">
+													<option value="queue">Queue</option>
+												</select>
+											</div>
+										</div>
+										<div class="col-12">
+											<div class="mb-3 form-group">
+												<label for="transactionNumber" class="form-label">Transaction Number</label>
+												<input type="text" name="transaction_number" id="transactionNumber" class="form-control" placeholder="Enter transaction number">
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button type="submit" class="btn btn-primary fw-bold" name="create" value="">Create</button>
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			</form>
+				</form>
 			</div>
-			<!-- FORM Panel -->
 
-			<!-- Table Panel -->
-			<div class="col-md-8">
-				<div class="card">
-					<div class="card-body">
-						<table class="table table-bordered table-hover">
-							<thead>
-								<tr>
-									<th class="text-center">#</th>
-									<th class="text-center">Transaction Type</th>
-									<th class="text-center">Action</th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php 
-								$i = 1;
-								$types = $conn->query("SELECT * FROM transactions where status = 1 order by id asc");
-								while($row=$types->fetch_assoc()):
-								?>
-								<tr>
-									<td class="text-center"><?php echo $i++ ?></td>
-									
-									<td class="">
-										 <p> <b><?php echo $row['name'] ?></b></p>
-									</td>
-									<td class="text-center">
-										<button class="btn btn-sm btn-primary edit_transaction" type="button" data-id="<?php echo $row['id'] ?>" data-name="<?php echo $row['name'] ?>"  >Edit</button>
-										<button class="btn btn-sm btn-danger delete_transaction" type="button" data-id="<?php echo $row['id'] ?>">Delete</button>
-									</td>
-								</tr>
-								<?php endwhile; ?>
-							</tbody>
-						</table>
-					</div>
-				</div>
+			<div class="table-responsive">
+				<table class="table table-bordered">
+					<thead>
+						<tr>
+							<th>Transaction Status</th>
+							<th>Transaction Number</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php while ($rowTransaction = $stmtTransaction->fetch()) { ?>
+							<tr>
+								<td><?php echo $rowTransaction->transaction_status ?></td>
+								<td><?php echo $rowTransaction->transaction_number ?></td>
+								<td>
+									<div class="d-inline-block">
+										<form action="./php/transaction_delete.php" method="post">
+											<input type="submit" value="Delete" class="btn btn-danger fw-bold" name="delete">
+											<input type="hidden" name="deleteId" value="<?php echo $rowTransaction->id ?>">
+										</form>
+									</div>
+								</td>
+							</tr>
+						<?php } ?>
+					</tbody>
+				</table>
 			</div>
-			<!-- Table Panel -->
 		</div>
-	</div>	
+	</div>
+</body>
 
-</div>
-<style>
-	
-	td{
-		vertical-align: middle !important;
-	}
-	td p{
-		margin: unset
-	}
-	img{
-		max-width:100px;
-		max-height: :150px;
-	}
-</style>
-<script>
-	function _reset(){
-		$('[name="id"]').val('');
-		$('#msg').html('')
-		$('#manage-transaction').get(0).reset();
-	}
-	
-	$('#manage-transaction').submit(function(e){
-		e.preventDefault()
-		start_load()
-		$('#msg').html('')
-		$.ajax({
-			url:'ajax.php?action=save_transaction',
-			data: new FormData($(this)[0]),
-		    cache: false,
-		    contentType: false,
-		    processData: false,
-		    method: 'POST',
-		    type: 'POST',
-			success:function(resp){
-				if(resp==1){
-					alert_toast("Data successfully added",'success')
-					setTimeout(function(){
-						location.reload()
-					},1500)
-
-				}
-				else if(resp==2){
-					$('#msg').html("<div class='alert alert-danger'>Name already exist.</div>")
-					end_load()
-
-				}
-			}
-		})
-	})
-	$('.edit_transaction').click(function(){
-		start_load()
-		var cat = $('#manage-transaction')
-		cat.get(0).reset()
-		cat.find("[name='id']").val($(this).attr('data-id'))
-		cat.find("[name='name']").val($(this).attr('data-name'))
-		end_load()
-	})
-	$('.delete_transaction').click(function(){
-		_conf("Are you sure to delete this transaction type?","delete_transaction",[$(this).attr('data-id')])
-	})
-	function displayImg(input,_this) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function (e) {
-        	$('#cimg').attr('src', e.target.result);
-        }
-
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-	function delete_transaction($id){
-		start_load()
-		$.ajax({
-			url:'ajax.php?action=delete_transaction',
-			method:'POST',
-			data:{id:$id},
-			success:function(resp){
-				if(resp==1){
-					alert_toast("Data successfully deleted",'success')
-					setTimeout(function(){
-						location.reload()
-					},1500)
-
-				}
-			}
-		})
-	}
-</script>
+</html>

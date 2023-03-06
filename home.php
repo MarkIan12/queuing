@@ -19,16 +19,10 @@
 					<h4 class="text-center">Select Transaction Queue Serving Display</h4>
 					<hr class="divider">
 					<div class="row">
-
-						<?php 
-						$trans = $conn->query("SELECT * FROM transactions where status = 1 order by name asc");
-							while($row=$trans->fetch_assoc()):
-						?>
 						<div class="col-md-4 mt-4">
 						<a href="index.php?page=display&id=<?php echo $row['id'] ?>" class="btn btn btn-primary btn-block "><?php echo ucwords($row['name']); ?> <i class="fa fa-angle-right">
 							</i></a>
 						</div>
-					<?php endwhile; ?>
 						
 					</div>
 				</div>
